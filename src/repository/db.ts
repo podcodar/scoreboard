@@ -1,11 +1,24 @@
-import { PrismaClient, User } from "@prisma/client";
-import { subDays } from "date-fns";
+import { createContext } from "./db.context";
 
-const prisma = new PrismaClient();
-
-interface AddDailyRecord {
+export interface AddDailyRecord {
   name: string;
   username: string;
+}
+
+export type TimeRange = [Date, Date];
+
+const { prisma, subDays } = createContext();
+
+export async function getScoreboard(range: TimeRange, limit = 10) {
+  const [from, to] = range;
+  const res = await prisma.dailyRecord.groupBy({
+    by: ["userId"],
+    _sum: { userId: true },
+    where: {
+      createdAt: { gt: from, lte: to },
+    },
+  });
+  console.log(res);
 }
 
 export async function createUserRecord(userId: number) {
