@@ -14,6 +14,7 @@ export async function getScoreboard(range: TimeRange, limit = 10) {
   const userScoreboard = await prisma.user.findMany({
     select: {
       name: true,
+      username: true,
       _count: {
         select: {
           dailyRecords: {
@@ -31,7 +32,7 @@ export async function getScoreboard(range: TimeRange, limit = 10) {
   });
 
   return userScoreboard.map((user) => ({
-    name: user.name,
+    name: user.name ?? user.username,
     points: user._count.dailyRecords,
   }));
 }

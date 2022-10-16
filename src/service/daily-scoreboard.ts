@@ -1,9 +1,39 @@
 import {
+  EXTRA_POINT_STANDUP_COUNT,
+  MAX_NAME_LENGTH,
+  SCOREBOARD_TITLE,
+  Weekday,
+} from "#/constants";
+import {
   addDailyRecord,
   createUserRecord,
   countUserActivityLastDays,
+  getScoreboard,
 } from "#/repository/db";
 import { DailyRecord } from "@prisma/client";
+import { format } from "date-fns";
+
+export async function makeScoreboardContent(limit = 10) {
+  const now = new Date();
+  const codeQuote = "```\n";
+  const monthStartsAt = new Date();
+  monthStartsAt.setDate(1);
+
+  let content = SCOREBOARD_TITLE.replace("%date", format(now, "dd MMMM yyyy"));
+  content += codeQuote;
+
+  const scoreboard = await getScoreboard([monthStartsAt, now], limit);
+
+  for (const idx in scoreboard) {
+    const user = scoreboard[idx]!;
+    const spaces = " ".repeat(MAX_NAME_LENGTH - user.name.length);
+    const name = `${user.name} ${spaces}`;
+    content += `${parseInt(idx) + 1}. ${name} | ${user.points}\n`;
+  }
+
+  content += codeQuote;
+  return content;
+}
 
 export async function computeDaily(username: string, name = "") {
   const record = await addDailyRecord({ name, username });
@@ -11,18 +41,6 @@ export async function computeDaily(username: string, name = "") {
   if (await shouldAddExtraPoint(record)) {
     await createUserRecord(record.userId);
   }
-}
-
-const EXTRA_POINT_STANDUP_COUNT = 5;
-
-enum Weekday {
-  Sunday = 0,
-  Monday,
-  Tuesday,
-  Wednesday,
-  Thursday,
-  Friday,
-  Saturday,
 }
 
 async function shouldAddExtraPoint(record: DailyRecord) {
