@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, User } from "@prisma/client";
 import { subDays } from "date-fns";
 
 const prisma = new PrismaClient();
@@ -6,6 +6,12 @@ const prisma = new PrismaClient();
 interface AddDailyRecord {
   name: string;
   username: string;
+}
+
+export async function createUserRecord(userId: number) {
+  const record = await prisma.dailyRecord.create({ data: { userId: userId } });
+  if (record == null) throw new Error("Cannot create record");
+  return record;
 }
 
 export async function addDailyRecord({ username, name }: AddDailyRecord) {
@@ -16,7 +22,7 @@ export async function addDailyRecord({ username, name }: AddDailyRecord) {
     if (user == null) throw new Error("Cannot create user");
   }
 
-  let record = await prisma.dailyRecord.findFirst({
+  const record = await prisma.dailyRecord.findFirst({
     orderBy: { createdAt: "desc" },
     where: {
       userId: user.id,
@@ -24,12 +30,8 @@ export async function addDailyRecord({ username, name }: AddDailyRecord) {
     },
   });
 
-  if (record == null) {
-    record = await prisma.dailyRecord.create({ data: { userId: user.id } });
-    if (user == null) throw new Error("Cannot create record");
-  }
-
-  return record;
+  if (record != null) return record;
+  return createUserRecord(user.id);
 }
 
 export async function countUserActivityLastDays(
