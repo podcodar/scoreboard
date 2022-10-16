@@ -11,14 +11,29 @@ const { prisma, subDays } = createContext();
 
 export async function getScoreboard(range: TimeRange, limit = 10) {
   const [from, to] = range;
-  const res = await prisma.dailyRecord.groupBy({
-    by: ["userId"],
-    _sum: { userId: true },
-    where: {
-      createdAt: { gt: from, lte: to },
+  const userScoreboard = await prisma.user.findMany({
+    select: {
+      name: true,
+      _count: {
+        select: {
+          dailyRecords: {
+            where: {
+              createdAt: { gt: from, lte: to },
+            },
+          },
+        },
+      },
     },
+    orderBy: {
+      dailyRecords: { _count: "desc" },
+    },
+    take: limit,
   });
-  console.log(res);
+
+  return userScoreboard.map((user) => ({
+    name: user.name,
+    points: user._count.dailyRecords,
+  }));
 }
 
 export async function createUserRecord(userId: number) {
@@ -47,12 +62,8 @@ export async function addDailyRecord({ username, name }: AddDailyRecord) {
   return createUserRecord(user.id);
 }
 
-export async function countUserActivityLastDays(
-  userId: number,
-  days: number
-): Promise<number> {
+export async function countUserActivityLastDays(userId: number, days: number) {
   const limitDate = subDays(Date.now(), days);
-
   return await prisma.dailyRecord.count({
     where: {
       userId,
