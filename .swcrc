@@ -1,9 +1,9 @@
 {
   "$schema": "https://json.schemastore.org/swcrc",
   "jsc": {
-    "baseUrl": "./src",
+    "baseUrl": "./src/",
     "paths": {
-      "#/*": ["./"]
+      "#/*": ["./*"]
     },
     "parser": {
       "syntax": "ecmascript",
