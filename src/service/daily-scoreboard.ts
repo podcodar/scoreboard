@@ -35,8 +35,8 @@ export async function makeScoreboardContent(limit = 10) {
   return content;
 }
 
-export async function computeDaily(username: string, name = "") {
-  const record = await addDailyRecord({ name, username });
+export async function computeDaily(username: string) {
+  const record = await addDailyRecord({ username });
 
   if (await shouldAddExtraPoint(record)) {
     await createUserRecord(record.userId);

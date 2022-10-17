@@ -1,5 +1,4 @@
 import { BOT_ID, DAILY_CHANNEL, DISCORD_TOKEN } from "#/constants";
-import { addDailyRecord } from "#/repository/db";
 import {
   Client,
   GatewayIntentBits,
@@ -8,7 +7,7 @@ import {
   REST,
   Routes,
 } from "discord.js";
-import { makeScoreboardContent } from "./daily-scoreboard";
+import { makeScoreboardContent, computeDaily } from "./daily-scoreboard";
 
 const commands = [
   {
@@ -63,8 +62,7 @@ async function messageHandler(msg: Message) {
 
   const { username } = msg.author;
   console.log("adding daily record for:", { username });
-  // TODO: remove name, as we don't need/have it
-  await addDailyRecord({ username, name: username });
+  await computeDaily(username);
 }
 
 async function interactionHandler(interaction: Interaction) {

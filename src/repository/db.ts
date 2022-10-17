@@ -1,7 +1,6 @@
 import { createContext } from "./db.context";
 
 export interface AddDailyRecord {
-  name: string;
   username: string;
 }
 
@@ -13,7 +12,6 @@ export async function getScoreboard(range: TimeRange, limit = 10) {
   const [from, to] = range;
   const userScoreboard = await prisma.user.findMany({
     select: {
-      name: true,
       username: true,
       _count: {
         select: {
@@ -32,7 +30,7 @@ export async function getScoreboard(range: TimeRange, limit = 10) {
   });
 
   return userScoreboard.map((user) => ({
-    name: user.name ?? user.username,
+    name: user.username,
     points: user._count.dailyRecords,
   }));
 }
@@ -43,11 +41,11 @@ export async function createUserRecord(userId: number) {
   return record;
 }
 
-export async function addDailyRecord({ username, name }: AddDailyRecord) {
+export async function addDailyRecord({ username }: AddDailyRecord) {
   let user = await prisma.user.findFirst({ where: { username } });
 
   if (user == null) {
-    user = await prisma.user.create({ data: { username, name } });
+    user = await prisma.user.create({ data: { username } });
     if (user == null) throw new Error("Cannot create user");
   }
 
